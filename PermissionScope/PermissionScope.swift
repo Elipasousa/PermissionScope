@@ -163,7 +163,7 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
 		
         // Set up main view
         view.frame = UIScreen.main.bounds
-        view.autoresizingMask = [UIView.AutoresizingMask.flexibleHeight, UIView.AutoresizingMask.flexibleWidth]
+        view.autoresizingMask = [UIViewAutoresizing.flexibleHeight, UIViewAutoresizing.flexibleWidth]
         view.backgroundColor = UIColor(red:0, green:0, blue:0, alpha:overlayAlpha)
         view.addSubview(baseView)
         // Base View
@@ -588,12 +588,12 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
         
         notifCenter
             .removeObserver(self,
-                            name: UIApplication.willResignActiveNotification,
+                            name: NSNotification.Name.UIApplicationWillResignActive,
                             object: nil)
         notifCenter
             .addObserver(self,
                          selector: #selector(finishedShowingNotificationPermission),
-                         name: UIApplication.didBecomeActiveNotification, object: nil)
+                         name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
         notificationTimer?.invalidate()
     }
     
@@ -612,10 +612,10 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
     */
     @objc func finishedShowingNotificationPermission () {
         NotificationCenter.default.removeObserver(self,
-            name: UIApplication.willResignActiveNotification,
+                                                  name: NSNotification.Name.UIApplicationWillResignActive,
             object: nil)
         NotificationCenter.default.removeObserver(self,
-            name: UIApplication.didBecomeActiveNotification,
+                                                  name: NSNotification.Name.UIApplicationDidBecomeActive,
             object: nil)
         
         notificationTimer?.invalidate()
@@ -650,7 +650,7 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
                 .first { $0 is NotificationsPermission } as? NotificationsPermission
             let notificationsPermissionSet = notificationsPermission?.notificationCategories
 
-            NotificationCenter.default.addObserver(self, selector: #selector(showingNotificationPermission), name: UIApplication.willResignActiveNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(showingNotificationPermission), name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
             
             notificationTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(finishedShowingNotificationPermission), userInfo: nil, repeats: false)
             
@@ -675,11 +675,11 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
     - returns: Permission status for the requested type.
     */
     public func statusMicrophone() -> PermissionStatus {
-        let recordPermission = AVAudioSession.sharedInstance().recordPermission
+        let recordPermission = AVAudioSession.sharedInstance().recordPermission()
         switch recordPermission {
-        case AVAudioSession.RecordPermission.denied:
+        case AVAudioSessionRecordPermission.denied:
             return .unauthorized
-        case AVAudioSession.RecordPermission.granted:
+        case AVAudioSessionRecordPermission.granted:
             return .authorized
         default:
             return .unknown
@@ -713,7 +713,7 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
     - returns: Permission status for the requested type.
     */
     public func statusCamera() -> PermissionStatus {
-        let status = AVCaptureDevice.authorizationStatus(for: AVMediaType(rawValue: convertFromAVMediaType(AVMediaType.video)))
+        let status = AVCaptureDevice.authorizationStatus(for: AVMediaType.video)
         switch status {
         case .authorized:
             return .authorized
@@ -731,7 +731,7 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
         let status = statusCamera()
         switch status {
         case .unknown:
-            AVCaptureDevice.requestAccess(for: AVMediaType(rawValue: convertFromAVMediaType(AVMediaType.video)),
+            AVCaptureDevice.requestAccess(for: AVMediaType.video,
                 completionHandler: { granted in
                     self.detectAndCallback()
             })
@@ -1165,9 +1165,9 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
         alert.addAction(UIAlertAction(title: "Show me".localized,
             style: .default,
             handler: { action in
-                NotificationCenter.default.addObserver(self, selector: #selector(self.appForegroundedAfterSettings), name: UIApplication.didBecomeActiveNotification, object: nil)
+                NotificationCenter.default.addObserver(self, selector: #selector(self.appForegroundedAfterSettings), name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
                 
-                let settingsUrl = URL(string: UIApplication.openSettingsURLString)
+                let settingsUrl = URL(string: UIApplicationOpenSettingsURLString)
                 UIApplication.shared.openURL(settingsUrl!)
         }))
         
@@ -1199,9 +1199,9 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
         alert.addAction(UIAlertAction(title: "Show me".localized,
             style: .default,
             handler: { action in
-                NotificationCenter.default.addObserver(self, selector: #selector(self.appForegroundedAfterSettings), name: UIApplication.didBecomeActiveNotification, object: nil)
+                NotificationCenter.default.addObserver(self, selector: #selector(self.appForegroundedAfterSettings), name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
                 
-                let settingsUrl = URL(string: UIApplication.openSettingsURLString)
+                let settingsUrl = URL(string: UIApplicationOpenSettingsURLString)
                 UIApplication.shared.openURL(settingsUrl!)
         }))
         
@@ -1220,7 +1220,7 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
     to recheck all the permissions and update the UI.
     */
     @objc func appForegroundedAfterSettings() {
-        NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
         
         detectAndCallback()
     }
@@ -1306,9 +1306,4 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
         
         completionBlock(results)
     }
-}
-
-// Helper function inserted by Swift 4.2 migrator.
-fileprivate func convertFromAVMediaType(_ input: AVMediaType) -> String {
-	return input.rawValue
 }
