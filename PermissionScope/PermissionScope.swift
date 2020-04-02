@@ -7,13 +7,14 @@
 //
 
 import UIKit
+import CoreLocation
 
 public typealias statusRequestClosure = (_ status: PermissionStatus) -> Void
 public typealias authClosureType      = (_ finished: Bool, _ results: [PermissionResult]) -> Void
 public typealias cancelClosureType    = (_ results: [PermissionResult]) -> Void
 typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
 
-@objc public class PermissionScope: UIViewController, UIGestureRecognizerDelegate {
+@objc public class PermissionScope: UIViewController, CLLocationManagerDelegate, UIGestureRecognizerDelegate {
 
     // MARK: UI Parameters
     
@@ -57,6 +58,13 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
     // MARK: View hierarchy for custom alert
     let baseView = UIView()
     public let contentView = UIView()
+
+    // MARK: - Various lazy managers
+    lazy var locationManager:CLLocationManager = {
+        let lm = CLLocationManager()
+        lm.delegate = self
+        return lm
+    }()
     
     /// NSUserDefaults standardDefaults lazy var
     lazy var defaults: UserDefaults = {
@@ -312,6 +320,8 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
 
         // this is a bit of a mess, eh?
         switch type {
+        case .locationInUse:
+            button.setTitle("Enable \(type.prettyDescription)".localized.uppercased(), for: .normal)
         default:
             button.setTitle("Allow \(type)".localized.uppercased(), for: .normal)
         }
@@ -364,6 +374,50 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
     }
 
     // MARK: - Status and Requests for each permission
+    
+    // MARK: Location
+
+    /**
+    Returns the current permission status for accessing LocationWhileInUse.
+    
+    - returns: Permission status for the requested type.
+    */
+    public func statusLocationInUse() -> PermissionStatus {
+        guard CLLocationManager.locationServicesEnabled() else { return .disabled }
+        
+        let status = CLLocationManager.authorizationStatus()
+        // if you're already "always" authorized, then you don't need in use
+        // but the user can still demote you! So I still use them separately.
+        switch status {
+        case .authorizedWhenInUse, .authorizedAlways:
+            return .authorized
+        case .restricted, .denied:
+            return .unauthorized
+        case .notDetermined:
+            return .unknown
+        }
+    }
+
+    /**
+    Requests access to LocationWhileInUse, if necessary.
+    */
+    @objc public func requestLocationInUse() {
+        let hasWhenInUseKey :Bool = !Bundle.main
+            .object(forInfoDictionaryKey: Constants.InfoPlistKeys.locationWhenInUse).isNil
+        assert(hasWhenInUseKey, Constants.InfoPlistKeys.locationWhenInUse + " not found in Info.plist.")
+        
+        let status = statusLocationInUse()
+        switch status {
+        case .unknown:
+            locationManager.requestWhenInUseAuthorization()
+        case .unauthorized:
+            self.showDeniedAlert(.locationInUse)
+        case .disabled:
+            self.showDisabledAlert(.locationInUse)
+        default:
+            break
+        }
+    }
 
     // MARK: Notifications
     
@@ -592,6 +646,12 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
         return false
     }
 
+    // MARK: Location delegate
+    
+    public func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        detectAndCallback()
+    }
+
     // MARK: - UI Helpers
     
     /**
@@ -699,6 +759,8 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
         // Get permission status
         let permissionStatus: PermissionStatus
         switch type {
+        case .locationInUse:
+            permissionStatus = statusLocationInUse()
         case .notifications:
             permissionStatus = statusNotifications()
         }

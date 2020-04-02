@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreLocation
 
 /**
 *  Protocol for permission configurations.
@@ -23,6 +24,10 @@ import Foundation
     public init(notificationCategories: Set<UIUserNotificationCategory>? = nil) {
         self.notificationCategories = notificationCategories
     }
+}
+
+@objc public class LocationWhileInUsePermission: NSObject, Permission {
+    public let type: PermissionType = .locationInUse
 }
 
 public typealias requestPermissionUnknownResult = () -> Void

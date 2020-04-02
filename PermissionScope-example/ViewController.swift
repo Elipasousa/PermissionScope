@@ -24,9 +24,8 @@ class ViewController: UIViewController {
         multiPscope.addPermission(NotificationsPermission(notificationCategories: nil),
             message: "We use this to send you\r\nspam and love notes")
 
-        // Other example permissions
-//        multiPscope.addPermission(MicrophonePermission(),message: "We can hear you")
-//        multiPscope.addPermission(BluetoothPermission(), message: "We use this to drain your battery")
+        multiPscope.addPermission(LocationWhileInUsePermission(),
+            message: "We use this to track\r\nwhere you live")
 
         noUIPscope.addPermission(NotificationsPermission(notificationCategories: nil), message: "notifications")
         noUIPscope.onAuthChange = {

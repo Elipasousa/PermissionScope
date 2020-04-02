@@ -19,5 +19,9 @@ enum Constants {
     
     struct NSUserDefaultsKeys {
         static let requestedNotifications        = "PS_requestedNotifications"
-    } 
+    }
+    
+    struct InfoPlistKeys {
+        static let locationWhenInUse             = "NSLocationWhenInUseUsageDescription"
+    }
 }
