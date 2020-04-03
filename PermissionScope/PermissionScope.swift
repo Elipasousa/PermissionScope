@@ -160,7 +160,6 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
         contentView.backgroundColor = UIColor.white
         contentView.layer.cornerRadius = 10
         contentView.layer.masksToBounds = true
-        contentView.layer.borderWidth = 0.5
 
         // header label
         headerLabel.font = UIFont.systemFont(ofSize: 22)
