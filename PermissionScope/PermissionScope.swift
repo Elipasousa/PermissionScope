@@ -671,7 +671,7 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
     
     - parameter permission: Permission type.
     */
-    func showDeniedAlert(_ permission: PermissionType) {
+    public func showDeniedAlert(_ permission: PermissionType) {
         // compile the results and pass them back if necessary
         if let onDisabledOrDenied = self.onDisabledOrDenied {
             self.getResultsForConfig({ results in
@@ -705,7 +705,7 @@ typealias resultsForConfigClosure     = ([PermissionResult]) -> Void
     
     - parameter permission: Permission type.
     */
-    func showDisabledAlert(_ permission: PermissionType) {
+    public func showDisabledAlert(_ permission: PermissionType) {
         // compile the results and pass them back if necessary
         if let onDisabledOrDenied = self.onDisabledOrDenied {
             self.getResultsForConfig({ results in
